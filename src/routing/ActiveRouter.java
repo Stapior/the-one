@@ -292,10 +292,10 @@ public abstract class ActiveRouter extends MessageRouter {
 	 */
 	protected void dropExpiredMessages() {
 		Message[] messages = getMessageCollection().toArray(new Message[0]);
-		for (int i=0; i<messages.length; i++) {
-			int ttl = messages[i].getTtl();
+		for (Message message : messages) {
+			int ttl = message.getTtl();
 			if (ttl <= 0) {
-				deleteMessage(messages[i].getId(), true);
+				deleteMessage(message.getId(), true);
 			}
 		}
 	}
@@ -471,7 +471,7 @@ public abstract class ActiveRouter extends MessageRouter {
 	protected Connection exchangeDeliverableMessages() {
 		List<Connection> connections = getConnections();
 
-		if (connections.size() == 0) {
+		if (connections.isEmpty()) {
 			return null;
 		}
 
@@ -530,14 +530,13 @@ public abstract class ActiveRouter extends MessageRouter {
 
 		List<Connection> connections = getConnections();
 
-		if (connections.size() == 0) {
+		if (connections.isEmpty()) {
 			return false; // not connected
 		}
 
-		for (int i=0, n=connections.size(); i<n; i++) {
-			Connection con = connections.get(i);
+		for (Connection con : connections) {
 			if (!con.isReadyForTransfer()) {
-				return true;	// a connection isn't ready for new transfer
+				return true;    // a connection isn't ready for new transfer
 			}
 		}
 
@@ -619,7 +618,7 @@ public abstract class ActiveRouter extends MessageRouter {
 
 		/* time to do a TTL check and drop old messages? Only if not sending */
 		if (SimClock.getTime() - lastTtlCheck >= TTL_CHECK_INTERVAL &&
-				sendingConnections.size() == 0) {
+				sendingConnections.isEmpty()) {
 			dropExpiredMessages();
 			lastTtlCheck = SimClock.getTime();
 		}

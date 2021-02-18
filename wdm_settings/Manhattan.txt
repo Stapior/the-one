@@ -1,11 +1,11 @@
 
-Scenario.name = default_scenario
+Scenario.name = best_scenario
 Scenario.simulateConnections = true
 Scenario.updateInterval = 1
 # 43k ~= 12h
 Scenario.endTime = 700k
 
-Report.warmup = 200000
+Report.warmup = 2000
 Group.msgTtl = 1433
 
 Scenario.nrofHostGroups = 3
@@ -13,7 +13,7 @@ Scenario.nrofHostGroups = 3
 ###################################
 ### common settings for all groups
 Group.movementModel = MapBasedMovement
-Group.router = EpidemicRouter
+Group.router = ProjectRouter
 Group.bufferSize = 100M
 Group.transmitRange = 10
 # transmit speed of 2 Mbps = 250kBps
