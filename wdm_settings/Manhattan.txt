@@ -1,11 +1,11 @@
 
-Scenario.name = best_scenario
+Scenario.name = fixed10
 Scenario.simulateConnections = true
 Scenario.updateInterval = 1
 # 43k ~= 12h
 Scenario.endTime = 700k
 
-Report.warmup = 2000
+Report.warmup = 10000
 Group.msgTtl = 1433
 
 Scenario.nrofHostGroups = 3
@@ -93,21 +93,14 @@ MapBasedMovement.mapFile1 = data/Manhattan/roads.wkt
 ## Reports - all report names have to be valid report classes
 
 # how many reports to load
-Report.nrofReports = 8
+Report.nrofReports = 1
 # default directory of reports (can be overriden per Report with output setting)
 Report.reportDir = [reports/Manhattan/1; reports/Manhattan/2; reports/Manhattan/3; reports/Manhattan/4; reports/Manhattan/5]
 #Report.reportDir = [reports/r1; reports/r2]
 #Report.reportDir = reports/
 
 # Report classes to load
-Report.report1 = InterContactTimesReport
-Report.report2 = ContactTimesReport
-Report.report3 = UniqueEncountersReport
-Report.report4 = TotalEncountersReport
-Report.report5 = EncountersVSUniqueEncountersReport
-Report.report6 = ContactsDuringAnICTReport
-Report.report7 = MessageStatsReport
-Report.report8 = ContactsPerHourReport
+Report.report1 = MessageStatsReport
 
 ## Default settings for some routers settings
 ProphetRouter.secondsInTimeUnit = 30
