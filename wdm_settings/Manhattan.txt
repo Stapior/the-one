@@ -1,5 +1,5 @@
 
-Scenario.name = best_scenario
+Scenario.name = old
 Scenario.simulateConnections = true
 Scenario.updateInterval = 1
 # 43k ~= 12h

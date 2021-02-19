@@ -7,6 +7,7 @@ import core.Settings;
 import util.Tuple;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,8 @@ import java.util.Optional;
 import static core.Constants.DEBUG;
 
 public class ProjectRouter extends ActiveRouter {
+
+    public static final int ROUTING_SIZE = 3;
 
     public ProjectRouter(Settings s) {
         super(s);
@@ -41,34 +44,36 @@ public class ProjectRouter extends ActiveRouter {
     }
 
     private void sendMessageByRoutingMap() {
-        List<Tuple<Message, Connection>> forTuples = new ArrayList<>();
-
         for (Message message : this.getMessageCollection()) {
-            if (messagesSents.getOrDefault(message.getId(), new ArrayList<>()).size() <= 2) {
-                DTNHost destination = message.getTo();
-                boolean sent = false;
-                List<DTNHost> orDefault = routingMap.getOrDefault(destination, new ArrayList<>());
-                for (int i = 1, orDefaultSize = orDefault.size(); i <= orDefaultSize; i++) {
-                    DTNHost hostToSend = orDefault.get(orDefault.size() - i);
-                    Optional<Connection> first = this.getConnections().stream().filter(con ->
-                            con.getOtherNode(getHost()).equals(hostToSend)).findFirst();
-                    if (first.isPresent() && !message.getHops().contains(first.get().getOtherNode(getHost()))) {
-                        forTuples.add(new Tuple<>(message, first.get()));
-                        sent = true;
-                        break;
-                    }
-                }
-                if (!sent) {
-                    for (Connection connection : this.getConnections()) {
-                        forTuples.add(new Tuple<>(message, connection));
-                    }
+            DTNHost destination = message.getTo();
+
+            List<DTNHost> orDefault = routingMap.getOrDefault(destination, new ArrayList<>());
+            for (int i = 1, orDefaultSize = orDefault.size(); i <= orDefaultSize; i++) {
+                DTNHost hostToSend = orDefault.get(orDefault.size() - i);
+                Optional<Connection> first = this.getConnections().stream().filter(con ->
+                        con.getOtherNode(getHost()).equals(hostToSend)).findFirst();
+                if (first.isPresent() && !message.getHops().contains(first.get().getOtherNode(getHost())) & trySend(first, message)) {
+                   return;
                 }
             }
         }
 
-        this.tryMessagesForConnected(forTuples);
+        for (Message message : this.getMessageCollection()) {
+            for (Connection connection : this.getConnections()) {
+                if(trySend(connection, message)){
+                    return;
+                }
+            }
+        }
     }
 
+    private boolean trySend(Optional<Connection> connection, Message message) {
+        return connection.isPresent() && trySend(connection.get(), message);
+    }
+
+    private boolean trySend(Connection connection, Message message) {
+        return this.tryMessagesForConnected(Collections.singletonList(new Tuple<>(message, connection))) != null;
+    }
 
     @Override
     protected int checkReceiving(Message m, DTNHost from) {
@@ -89,14 +94,15 @@ public class ProjectRouter extends ActiveRouter {
     @Override
     protected void transferDone(Connection con) {
         Message m = con.getMessage();
-        messagesSents.putIfAbsent(m.getId(), new ArrayList<>());
-        messagesSents.get(m.getId()).add(con.getOtherNode(getHost()));
-
         if (m == null) {
             if (DEBUG) core.Debug.p("Null message for con " + con);
             return;
         }
-        if (m.getTo() == con.getOtherNode(getHost())) {
+
+        messagesSents.putIfAbsent(m.getId(), new ArrayList<>());
+        messagesSents.get(m.getId()).add(con.getOtherNode(getHost()));
+
+        if (messagesSents.size() >= ROUTING_SIZE || m.getTo() == con.getOtherNode(getHost())) {
             this.deleteMessage(m.getId(), false);
         }
 
@@ -111,7 +117,7 @@ public class ProjectRouter extends ActiveRouter {
                 routingHosts = this.routingMap.get(pathHost);
             }
             routingHosts.add(from);
-            if (routingHosts.size() > 2) {
+            if (routingHosts.size() > ROUTING_SIZE) {
                 routingHosts.remove(0);
             }
         });
